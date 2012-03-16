@@ -24,7 +24,10 @@ install_home()
 
 post_install_actions()
 {
-    echo "Done"
+    if [ ! -d "vim/bundle/vundle" ]; then
+        cd vim/bundle/
+        git clone https://github.com/gmarik/vundle.git vundle
+    fi
 }
 
 

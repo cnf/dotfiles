@@ -1,7 +1,23 @@
+" Vundle: {{{
+set nocompatible
+filetype off
+
+set rtp+=~/.vim/bundle/vundle/
+call vundle#rc()
+
+Bundle 'gmarik/vundle'
+
+Bundle 'Lokaltog/vim-powerline'
+Bundle 'tpope/vim-fugitive'
+Bundle 'scrooloose/syntastic'
+Bundle 'cnf/vim-pointless'
+
+filetype plugin indent on
+"}}}
+
 " Initialize: {{{
 " Use Vim settings, rather then Vi settings (much better!).
 " This must be first, because it changes other options as a side effect.
-set nocompatible
 
 " ================ Pathogen Initialization ===============
 " This loads all the plugins in ~/.vim/bundle
@@ -59,5 +75,6 @@ let g:Powerline_symbols = 'fancy'
 " Show syntax highlighting groups for word under cursor
 map <F3> :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> trans<' . synIDattr(synID(line("."),col("."),0),"name") . "> lo<" . synIDattr(synIDtrans(synID(line("."),col("."),1)),"name") . ">" . " FG:" . synIDattr(synIDtrans(synID(line("."),col("."),1)),"fg#")<CR>
 " }}}
+
 
 " vim: set foldmethod=marker : "
