@@ -30,10 +30,13 @@ fi
 
 export TIMEFORMAT=$'\nreal %3R\tuser %3U\tsys %3S\tpcpu %P\n'
 export PAGER=less
-export LESSOPEN='|/usr/bin/lesspipe.sh %s 2>&-'
+if command_exists lesspipe; then
+    export LESSOPEN='|lesspipe %s 2>&-'
+fi
+#export LESSOPEN='|/usr/bin/lesspipe.sh %s 2>&-'
 export EDITOR=`command -v vim`
 
-export HISTCONTROL="erasedups"
+export HISTCONTROL=ignoredups:ignorespace
 #export HISTIGNORE="ls:cd:[bf]g:exit:[ \t]*"
 
 #echo -ne "\033]0;${USER}@`hostname -s`\007"
