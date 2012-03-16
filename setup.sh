@@ -24,10 +24,12 @@ install_home()
 
 post_install_actions()
 {
+    [[ ! -d vim/bundle ]] && mkdir -p vim/bundle
     if [ ! -d "vim/bundle/vundle" ]; then
         cd vim/bundle/
         git clone https://github.com/gmarik/vundle.git vundle
     fi
+    vim +BundleInstall +qall
 }
 
 
