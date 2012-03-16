@@ -1,0 +1,5 @@
+if command_exists tidy ; then
+    export HTML_TIDY="~/.tidyrc"
+fi
+
+# vim: set filetype=sh : #

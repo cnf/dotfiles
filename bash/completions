@@ -1,0 +1,1195 @@
+# PROGRAMMABLE COMPLETION - ONLY SINCE BASH-2.04
+shopt -s extglob        # necessary
+set +o nounset          # otherwise some completions will fail
+
+complete -A hostname   rsh rcp telnet rlogin r ftp ping disk
+complete -A export     printenv
+complete -A variable   export local readonly unset
+complete -A enabled    builtin
+complete -A alias      alias unalias
+complete -A function   function
+complete -A user       su mail finger
+
+complete -A helptopic  help     # currently same as builtins
+complete -A shopt      shopt
+complete -A stopped -P '%' bg
+complete -A job -P '%'     fg jobs disown
+
+complete -A directory  mkdir rmdir
+complete -A directory   -o default cd
+
+complete -f -o default -X '!*.pl'  perl perl5
+
+complete -f -X '!*.@(?(la)tex|?(LA)TEX|texi|TEXI|dtx|DTX|ins|INS)' tex latex slitex jadetex pdfjadetex pdftex pdflatex texi2dvi
+
+# user commands see only users
+complete -u su usermod userdel passwd chage write chfn groups slay w
+
+# bg completes with stopped jobs
+complete -A stopped -P '%' bg
+
+# readonly and unset complete with shell variables
+complete -v readonly unset
+
+# set completes with set options
+complete -A setopt set
+
+# type and which complete on commands
+complete -c command type which
+
+# This is a 'universal' completion function - it works when commands have
+# a so-called 'long options' mode , ie: 'ls --all' instead of 'ls -a'
+
+_get_longopts () 
+{ 
+    $1 --help | sed  -e '/--/!d' -e 's/.*--\([^[:space:].,]*\).*/--\1/'| \
+	grep ^"$2" |sort -u ;
+}
+
+_longopts_func ()
+{
+    case "${2:-*}" in
+	-*)	;;
+	*)	return ;;
+    esac
+
+    case "$1" in
+	\~*)	eval cmd="$1" ;;
+	*)	cmd="$1" ;;
+    esac
+    COMPREPLY=( $(_get_longopts ${1} ${2} ) )
+}
+complete  -o default -F _longopts_func bash
+complete  -o default -F _longopts_func curl
+complete  -o default -F _longopts_func wget id info a2ps ls recode
+
+# This function expands tildes in pathnames
+#
+_expand()
+{
+	[ "$cur" != "${cur%\\}" ] && cur="$cur\\"
+
+	# expand ~username type directory specifications
+	if [[ "$cur" == \~*/* ]]; then
+		eval cur=$cur
+		
+	elif [[ "$cur" == \~* ]]; then
+		cur=${cur#\~}
+		COMPREPLY=( $( compgen -P '~' -u $cur ) )
+		return ${#COMPREPLY[@]}
+	fi
+}
+
+# This function performs file and directory completion. It's better than
+# simply using 'compgen -f', because it honours spaces in filenames.
+# If passed -d, it completes only on directories. If passed anything else,
+# it's assumed to be a file glob to complete on.
+#
+_filedir()
+{
+	local IFS=$'\t\n' xspec #glob
+
+	_expand || return 0
+
+	#glob=$(set +o|grep noglob) # save glob setting.
+	#set -f		 # disable pathname expansion (globbing)
+
+	if [ "${1:-}" = -d ]; then
+		COMPREPLY=( ${COMPREPLY[@]:-} $( compgen -d -- $cur ) )
+		#eval "$glob"    # restore glob setting.
+		return 0
+	fi
+
+	xspec=${1:+"!*.$1"}	# set only if glob passed in as $1
+	COMPREPLY=( ${COMPREPLY[@]:-} $( compgen -f -X "$xspec" -- "$cur" ) \
+		    $( compgen -d -- "$cur" ) )
+	#eval "$glob"    # restore glob setting.
+}
+
+# This function completes on all available network interfaces
+# -a: restrict to active interfaces only
+# -w: restrict to wireless interfaces only
+#
+_available_interfaces()
+{
+	local cmd
+
+	if [ "${1:-}" = -w ]; then
+		cmd="iwconfig"
+	elif [ "${1:-}" = -a ]; then
+		cmd="ifconfig"
+	else
+		cmd="ifconfig -a"
+	fi
+
+	COMPREPLY=( $( eval $cmd 2>/dev/null | \
+		sed -ne 's|^\('$cur'[^[:space:][:punct:]]\{1,\}\).*$|\1|p') )
+}
+
+_make_targets ()
+{
+    local mdef makef gcmd cur prev i
+
+    COMPREPLY=()
+    cur=${COMP_WORDS[COMP_CWORD]}
+    prev=${COMP_WORDS[COMP_CWORD-1]}
+
+    # if prev argument is -f, return possible filename completions.
+    # we could be a little smarter here and return matches against
+    # `makefile Makefile *.mk', whatever exists
+    case "$prev" in
+        -*f)    COMPREPLY=( $(compgen -f $cur ) ); return 0;;
+    esac
+
+    # if we want an option, return the possible posix options
+    case "$cur" in
+        -)      COMPREPLY=(-e -f -i -k -n -p -q -r -S -s -t); return 0;;
+    esac
+
+    # make reads `makefile' before `Makefile'
+    if [ -f makefile ]; then
+        mdef=makefile
+    elif [ -f Makefile ]; then
+        mdef=Makefile
+    else
+        mdef=*.mk               # local convention
+    fi
+
+    # before we scan for targets, see if a makefile name was specified
+    # with -f
+    for (( i=0; i < ${#COMP_WORDS[@]}; i++ )); do
+        if [[ ${COMP_WORDS[i]} == -*f ]]; then
+            eval makef=${COMP_WORDS[i+1]}      # eval for tilde expansion
+            break
+        fi
+    done
+
+        [ -z "$makef" ] && makef=$mdef
+
+    # if we have a partial word to complete, restrict completions to
+    # matches of that word
+    if [ -n "$2" ]; then gcmd='grep "^$2"' ; else gcmd=cat ; fi
+
+    # if we don't want to use *.mk, we can take out the cat and use
+    # test -f $makef and input redirection
+    COMPREPLY=( $(cat $makef 2>/dev/null | \
+    awk 'BEGIN {FS=":"} /^[^.#   ][^=]*:/ {print $1}' \
+    | tr -s ' ' '\012' | sort -u | eval $gcmd ) )
+}
+
+complete -F _make_targets -X '+($*|*.[cho])' make gmake pmake
+
+# This function provides simple user@host completion
+#
+_user_at_host() {
+    local cur
+
+    COMPREPLY=()
+    cur=${COMP_WORDS[COMP_CWORD]}
+
+    if [[ $cur == *@* ]]; then
+        _known_hosts
+    else
+        COMPREPLY=( $( compgen -u -- "$cur" ) )
+    fi
+
+    return 0
+}
+
+# This function performs host completion based on ssh's known_hosts files,
+# defaulting to standard host completion if they don't exist.
+#
+_known_hosts()
+{
+       local cur curd ocur user suffix aliases global_kh user_kh hosts i host
+       local -a kh khd config
+
+	COMPREPLY=()
+	cur=${COMP_WORDS[COMP_CWORD]}
+	ocur=$cur
+
+	[ "$1" = -a ] || [ "$2" = -a ] && aliases='yes'
+	[ "$1" = -c ] || [ "$2" = -c ] && suffix=':'
+	[[ $cur == *@* ]] && user=${cur%@*}@ && cur=${cur#*@}
+	kh=()
+
+	# ssh config files
+	[ -r /etc/ssh/ssh_config ] &&
+	  config=( ${config[@]} /etc/ssh/ssh_config )
+	[ -r ~/.ssh/config ] &&
+	  config=( ${config[@]} ~/.ssh/config )
+	[ -r ~/.ssh2/config ] &&
+	  config=( ${config[@]} ~/.ssh2/config )
+
+	if [ ${#config[@]} -gt 0 ]; then
+	    # expand path (if present) to global known hosts file
+	    global_kh=$( eval echo $( sed -ne 's/^[Gg][Ll][Oo][Bb][Aa][Ll][Kk][Nn][Oo][Ww][Nn][Hh][Oo][Ss][Tt][Ss][Ff][Ii][Ll][Ee]['"$'\t '"']*\(.*\)$/\1/p' ${config[@]} ) )
+	    # expand path (if present) to user known hosts file
+	    user_kh=$( eval echo $( sed -ne 's/^[Uu][Ss][Ee][Rr][Kk][Nn][Oo][Ww][Nn][Hh][Oo][Ss][Tt][Ss][Ff][Ii][Ll][Ee]['"$'\t '"']*\(.*\)$/\1/p' ${config[@]} ) )
+	fi
+
+	# choose which global known hosts file to use
+	if [ -r "$global_kh" ]; then
+	    kh=( "$global_kh" )
+	else
+	    [ -r /etc/ssh/ssh_known_hosts ] &&
+	      kh=( ${kh[@]} /etc/ssh/ssh_known_hosts )
+	    [ -r /etc/ssh/ssh_known_hosts2 ] &&
+	      kh=( ${kh[@]} /etc/ssh/ssh_known_hosts2 )
+	    [ -r /etc/known_hosts ] &&
+	      kh=( ${kh[@]} /etc/known_hosts )
+	    [ -r /etc/known_hosts2 ] &&
+	      kh=( ${kh[@]} /etc/known_hosts2 )
+	    [ -d /etc/ssh2/knownhosts ] &&
+	      khd=( ${khd[@]} /etc/ssh2/knownhosts/*pub )
+	fi
+
+	# choose which user known hosts file to use
+	if [ -r "$user_kh" ]; then
+	    kh=( ${kh[@]} "$user_kh" )
+	else
+	    [ -r ~/.ssh/known_hosts ] &&
+	      kh=( ${kh[@]} ~/.ssh/known_hosts )
+	    [ -r ~/.ssh/known_hosts2 ] &&
+	      kh=( ${kh[@]} ~/.ssh/known_hosts2 )
+	    [ -d ~/.ssh2/hostkeys ] &&
+	      khd=( ${khd[@]} ~/.ssh2/hostkeys/*pub )
+	fi
+
+	# If we have known_hosts files to use
+	if [ ${#kh[@]} -gt 0 -o ${#khd[@]} -gt 0 ]; then
+	    # Escape slashes and dots in paths for awk
+	    cur=${cur//\//\\\/}
+	    cur=${cur//\./\\\.}
+	    curd=$cur
+
+	    if [[ "$cur" == [0-9]*.* ]]; then
+		# Digits followed by a dot - just search for that
+		cur="^$cur.*"
+	    elif [[ "$cur" == [0-9]* ]]; then
+		# Digits followed by no dot - search for digits followed
+		# by a dot
+		cur="^$cur.*\."
+	    elif [ -z "$cur" ]; then
+		# A blank - search for a dot or an alpha character
+		cur="[a-z.]"
+	    else
+		cur="^$cur"
+	    fi
+
+	    if [ ${#kh[@]} -gt 0 ]; then
+
+		# FS needs to look for a comma separated list
+		COMPREPLY=( $( awk 'BEGIN {FS=","}
+				{for (i=1; i<=2; ++i) { \
+				       gsub(" .*$", "", $i); \
+				       if ($i ~ /'$cur'/) {print $i} \
+				}}' ${kh[@]} 2>/dev/null ) )
+	    fi
+	    if [ ${#khd[@]} -gt 0 ]; then
+		# Needs to look for files called
+		# .../.ssh2/key_22_<hostname>.pub
+		# dont fork any processes, because in a cluster environment, 
+		# there can be hundreds of hostkeys
+		for i in ${khd[@]} ; do
+		    if [[ "$i" == *key_22_$curd*.pub ]] && [ -r "$i" ] ; then
+			host=${i/#*key_22_/}
+			host=${host/%.pub/}
+			COMPREPLY=( ${COMPREPLY[@]} $host )
+		    fi
+		done
+	    fi
+	    # append any available aliases from config files
+	    if [ ${#config[@]} -gt 0 ] && [ -n "$aliases" ]; then
+		hosts=$( compgen -W "$( sed -ne 's/^[Hh][Oo][Ss][Tt]['"$'\t '"']*\([^*?]*\)$/\1/p' ${config[@]} )" -- $ocur )
+		COMPREPLY=( ${COMPREPLY[@]} $hosts )
+	    fi
+
+	    # apply suffix
+	    for (( i=0; i < ${#COMPREPLY[@]}; i++ )); do
+		COMPREPLY[i]=$user${COMPREPLY[i]}$suffix
+	    done
+	else
+	    # Just do normal hostname completion
+	    COMPREPLY=( $( compgen -A hostname -S "$suffix" -- $cur ) )
+	fi
+
+	return 0
+}
+complete -F _known_hosts traceroute traceroute6 ping fping telnet host nslookup rsh rlogin ftp dig ssh-installkeys mtr
+
+# ssh(1) completion
+#
+_ssh()
+{
+	local cur prev
+	local -a config
+
+	COMPREPLY=()
+	cur=${COMP_WORDS[COMP_CWORD]}
+	prev=${COMP_WORDS[COMP_CWORD-1]}
+
+	case "$prev" in
+	-*c)
+	    COMPREPLY=( $( compgen -W 'blowfish 3des 3des-cbc blowfish-cbc \
+			   arcfour cast128-cbc' -- $cur ) )
+	    ;;
+	-*i)
+	    _filedir
+	    ;;
+	-*l)
+	    COMPREPLY=( $( compgen -u -- $cur ) )
+	    ;;
+	*)
+	    _known_hosts -a
+
+	    [ $COMP_CWORD -eq 1 ] || \
+		COMPREPLY=( ${COMPREPLY[@]} $( compgen -c -- $cur ) )
+	esac
+
+	return 0
+}
+shopt -u hostcomplete && complete -F _ssh ssh slogin sftp
+
+# scp(1) completion
+#
+_scp()
+{
+	local cur userhost path
+
+	local IFS=$'\t\n'
+	COMPREPLY=()
+	cur=${COMP_WORDS[COMP_CWORD]}
+
+	_expand || return 0
+
+	if [[ "$cur" == *:* ]]; then
+		# remove backslash escape from :
+		cur=${cur/\\:/:}
+		userhost=${cur%%?(\\):*}
+		path=${cur#*:}
+		# unescape spaces
+		path=${path//\\\\\\\\ / }
+		if [ -z "$path" ]; then
+			# default to home dir of specified user on remote host
+			path=$(ssh -o 'Batchmode yes' $userhost pwd 2>/dev/null)
+		fi
+		# escape spaces; remove executables, aliases, pipes and sockets;
+		# add space at end of file names
+		COMPREPLY=( $( ssh -o 'Batchmode yes' $userhost \
+			       command ls -aF1d "$path*" 2>/dev/null | \
+			       sed -e 's/[][(){}<>",:;^&!$&=?`|\ ]/\\\\\\&/g' \
+				   -e 's/[*@|=]$//g' -e 's/[^\/]$/& /g' ) )
+		return 0
+	fi
+
+	[[ "$cur" == */* ]] || _known_hosts -c -a
+		COMPREPLY=( ${COMPREPLY[@]} $( command ls -aF1d $cur* \
+			    2>/dev/null | sed \
+			    -e 's/[][(){}<>",:;^&!$&=?`|\ ]/\\&/g' \
+			    -e 's/[*@|=]$//g' -e 's/[^\/]$/& /g' ) )
+	return 0
+}
+complete -F _scp $nospace scp
+
+# rsync(1) completion
+#
+_rsync()
+{
+	local cur prev shell i userhost path
+ 
+	COMPREPLY=()
+	cur=${COMP_WORDS[COMP_CWORD]}
+	prev=${COMP_WORDS[COMP_CWORD-1]}
+
+	_expand || return 0
+
+	case "$prev" in
+	--@(config|password-file|include-from|exclude-from))
+		_filedir
+		return 0
+		;;
+	-@(T|-temp-dir|-compare-dest))
+		_filedir -d
+		return 0
+		;;
+	-@(e|-rsh))
+		COMPREPLY=( $( compgen -W 'rsh ssh' -- $cur ) )
+		return 0
+		;;
+	esac
+ 
+	case "$cur" in
+	-*)
+		COMPREPLY=( $( compgen -W '-v -q  -c -a -r -R -b -u -l -L -H \
+				-p -o -g -D -t -S -n -W -x -B -e -C -I -T -P \
+				-z -h -4 -6 --verbose --quiet --checksum \
+				--archive --recursive --relative --backup \
+				--backup-dir --suffix= --update --links \
+				--copy-links --copy-unsafe-links --safe-links \
+				--hard-links --perms --owner --group --devices\
+				--times --sparse --dry-run --whole-file \
+				--no-whole-file --one-file-system \
+				--block-size= --rsh= --rsync-path= \
+				--cvs-exclude --existing --ignore-existing \
+				--delete --delete-excluded --delete-after \
+				--ignore-errors --max-delete= --partial \
+				--force --numeric-ids --timeout= \
+				--ignore-times --size-only --modify-window= \
+				--temp-dir= --compare-dest= --compress \
+				--exclude= --exclude-from= --include= \
+				--include-from= --version --daemon --no-detach\
+				--address= --config= --port= --blocking-io \
+				--no-blocking-io --stats --progress \
+				--log-format= --password-file= --bwlimit= \
+				--write-batch= --read-batch= --help' -- $cur ))
+		;;
+	*:*)
+		# find which remote shell is used
+		shell=rsh
+		for (( i=1; i < COMP_CWORD; i++ )); do
+			if [[ "${COMP_WORDS[i]}" == -@(e|-rsh) ]]; then
+				shell=${COMP_WORDS[i+1]}
+				break
+			fi
+		done
+		if [[ "$shell" == ssh ]]; then
+			# remove backslash escape from :
+			cur=${cur/\\:/:}
+			userhost=${cur%%?(\\):*}
+			path=${cur#*:}
+			# unescape spaces
+			path=${path//\\\\\\\\ / }
+			if [ -z "$path" ]; then
+				# default to home dir of specified
+				# user on remote host
+				path=$(ssh -o 'Batchmode yes' \
+					$userhost pwd 2>/dev/null)
+			fi
+			# escape spaces; remove executables, aliases, pipes
+			# and sockets; add space at end of file names
+			COMPREPLY=( $( ssh -o 'Batchmode yes' $userhost \
+				command ls -aF1d "$path*" 2>/dev/null | \
+				sed -e 's/ /\\\\\\\ /g' -e 's/[*@|=]$//g' \
+				-e 's/[^\/]$/& /g' ) )
+		fi
+		;;
+	*)
+		_known_hosts -c -a
+		_filedir
+		;;
+	esac
+ 
+	return 0
+} 
+complete -F _rsync $nospace $filenames rsync
+
+# tcpdump(8) completion
+#
+_tcpdump()
+{
+	local cur
+
+	COMPREPLY=()
+	cur=${COMP_WORDS[COMP_CWORD]}
+	prev=${COMP_WORDS[COMP_CWORD-1]}
+
+	case "$prev" in
+		-@(r|w|F))
+			_filedir
+			return 0
+			;;
+		-i)
+			_available_interfaces -a
+			return 0
+			;;
+	esac
+
+
+	if [[ "$cur" == -* ]]; then
+		COMPREPLY=( $( compgen -W '-a -d -e -f -l -n -N -O -p \
+			-q -R -S -t -u -v -x -C -F -i -m -r -s -T -w \
+			-E' -- $cur ) )
+	fi
+
+} 
+complete -F _tcpdump tcpdump
+
+# gzip(1) completion
+#
+_gzip()
+{
+	local cur prev xspec IFS=$'\t\n'
+
+	COMPREPLY=()
+	cur=${COMP_WORDS[COMP_CWORD]}
+	prev=${COMP_WORDS[COMP_CWORD-1]}
+
+	if [[ "$cur" == -* ]]; then
+		COMPREPLY=( $( compgen -W '-c -d -f \
+			-h -l -L -n -N -q -r -S -t -v -V \
+			-1 -2 -3 -4 -5 -6 -7 -8 -9 \
+			--stdout --decompress --force --help --list \
+			--license --no-name --name --quiet --recursive \
+			--suffix --test --verbose --version --fast \
+			--best' -- $cur ) )
+		return 0
+	fi
+
+	xspec="*.?(t)gz"
+	if [[ "$prev" == --* ]]; then
+		[[ "$prev" == --decompress || \
+			"$prev" == --list || \
+			"$prev" == --test ]] && xspec="!"$xspec
+		[[ "$prev" == --force ]] && xspec=
+	elif [[ "$prev" == -* ]]; then
+		[[ "$prev" == -*[dlt]* ]] && xspec="!"$xspec
+		[[ "$prev" == -*f* ]] && xspec=
+	elif [ "$prev" = '>' ]; then
+		xspec=
+	fi
+
+	_expand || return 0
+
+	COMPREPLY=( $( compgen -f -X "$xspec" -- $cur ) \
+		    $( compgen -d -- $cur ) )
+} 
+complete -F _gzip $filenames gzip
+
+# bzip2(1) completion
+#
+_bzip2()
+{
+	local cur prev xspec
+
+	COMPREPLY=()
+	cur=${COMP_WORDS[COMP_CWORD]}
+	prev=${COMP_WORDS[COMP_CWORD-1]}
+
+	if [[ "$cur" == -* ]]; then
+		COMPREPLY=( $( compgen -W '-c -d -f -h -k -L -q -s \
+			-t -v -V -z -1 -2 -3 -4 -5 -6 -7 -8 -9 \
+			--help --decompress --compress --keep --force \
+			--test --stdout --quiet --verbose --license \
+			--version --small --fast --best' -- $cur ) )
+		return 0
+	fi
+
+	xspec="*.bz2"
+	if [[ "$prev" == --* ]]; then
+		[[ "$prev" == --decompress || \
+			"$prev" == --list || \
+			"$prev" == --test ]] && xspec="!"$xspec
+		[[ "$prev" == --compress ]] && xspec=
+	elif [[ "$prev" == -* ]]; then
+		[[ "$prev" == -*[dt]* ]] && xspec="!"$xspec
+		[[ "$prev" == -*z* ]] && xspec=
+	fi
+
+	_expand || return 0
+
+	COMPREPLY=( $( compgen -f -X "$xspec" -- $cur ) \
+		    $( compgen -d -- $cur ) )
+} 
+complete -F _bzip2 $filenames bzip2
+
+# screen(1) completion
+#
+_screen()
+{
+	local cur prev preprev
+
+	COMPREPLY=()
+	cur=${COMP_WORDS[COMP_CWORD]}
+	prev=${COMP_WORDS[COMP_CWORD-1]}
+
+	[ "$COMP_CWORD" -ge 2 ] && preprev=${COMP_WORDS[COMP_CWORD-2]}
+
+	if [ "$preprev" = "-d" -o "$preprev" = "-D" -a "$prev" = "-r" -o \
+	     "$prev" = "-R" ]; then
+		# list all
+		COMPREPLY=( $( command screen -ls | \
+				sed -ne 's|^['$'\t'']\+\('$cur'[0-9]\+\.[^'$'\t'']\+\).*$|\1|p' ) )
+	else
+		case "$prev" in
+		-[rR])
+			# list detached
+			COMPREPLY=( $( command screen -ls | \
+					sed -ne 's|^['$'\t'']\+\('$cur'[0-9]\+\.[^'$'\t'']\+\).*Detached.*$|\1|p' ) )
+			;;
+		-[dDx])
+			# list attached
+			COMPREPLY=( $( command screen -ls | \
+					sed -ne 's|^['$'\t'']\+\('$cur'[0-9]\+\.[^'$'\t'']\+\).*Attached.*$|\1|p' ) )
+			;;
+		-s)
+			# shells
+			COMPREPLY=( $( grep ^${cur:-[^#]} /etc/shells ) )
+			;;
+		*)
+			;;
+		esac
+	fi
+
+	return 0
+} 
+complete -F _screen $default screen
+
+
+
+
+# Perl completion
+#
+_perlmodules()
+{
+    COMPREPLY=( $( compgen -P "$prefix" -W "$( perl -e 'sub mods { my ($base,$dir)=@_; return if  $base !~ /^\Q$ENV{cur}/; chdir($dir) or return; for (glob(q[*.pm])) {s/\.pm$//; print qq[$base$_\n]}; mods(/^(?:[.\d]+|$Config{archname}-$Config{osname}|auto)$/ ? undef : qq[${base}${_}\\\\:\\\\:],qq[$dir/$_]) for grep {-d} glob(q[*]); } mods(undef,$_) for @INC;' )" -- $cur ) )
+}
+
+_perl()
+{
+    local cur prev prefix temp
+
+    COMPREPLY=()
+    cur=${COMP_WORDS[COMP_CWORD]}
+    prev=${COMP_WORDS[COMP_CWORD-1]}
+    prefix=""
+
+    # completing an option (may or may not be separated by a space)
+    if [[ "$cur" == -?* ]]; then
+	temp=$cur
+	prev=${temp:0:2}
+	cur=${temp:2}
+	prefix=$prev
+    fi
+
+    # only handle module completion for now
+    case "$prev" in
+	-m|-M)
+	    _perlmodules
+	    return 0
+	    ;;
+    esac
+
+    # handle case where first parameter is not a dash option
+    if [ $COMP_CWORD -eq 1 ] && [[ "$cur" != -* ]]; then
+	_filedir
+	return 0
+    fi
+
+    # complete using basic options
+    COMPREPLY=( $( compgen -W '-C -s -T -u -U -W -X -h -v -V -c -w -d -D -p \
+			-n -a -F -l -0 -I -m -M -P -S -x -i -e ' -- $cur ) )
+    return 0
+}
+complete -F _perl $filenames perl
+
+_perldoc()
+{
+    local cur prev prefix temp
+
+    COMPREPLY=()
+    cur=${COMP_WORDS[COMP_CWORD]}
+    prev=${COMP_WORDS[COMP_CWORD-1]}
+    prefix=""
+
+    # completing an option (may or may not be separated by a space)
+    if [[ "$cur" == -?* ]]; then
+	temp=$cur
+	prev=${temp:0:2}
+	cur=${temp:2}
+	prefix=$prev
+    fi
+
+    # complete builtin perl functions
+    case $prev in
+	-f)
+	    COMPREPLY=( $( compgen -W 'chomp chop chr crypt hex index lc \
+	    lcfirst length oct ord pack q qq reverse rindex sprintf \
+	    substr tr uc ucfirst y m pos quotemeta s split study qr abs \
+	    atan2 cos exp hex int log oct rand sin sqrt srand pop push \
+	    shift splice unshift grep join map qw reverse sort unpack \
+	    delete each exists keys values binmode close closedir \
+	    dbmclose dbmopen die eof fileno flock format getc print \
+	    printf read readdir rewinddir seek seekdir select syscall \
+	    sysread sysseek syswrite tell telldir truncate warn write \
+	    pack read syscall sysread syswrite unpack vec -X chdir chmod \
+	    chown chroot fcntl glob ioctl link lstat mkdir open opendir \
+	    readlink rename rmdir stat symlink umask unlink utime caller \
+	    continue do dump eval exit goto last next redo return \
+	    sub wantarray caller import local my our package use defined \
+	    formline reset scalar undef \
+	    alarm exec fork getpgrp getppid getpriority kill pipe qx \
+	    setpgrp setpriority sleep system times wait waitpid \
+	    import no package require use bless dbmclose dbmopen package \
+	    ref tie tied untie use accept bind connect getpeername \
+	    getsockname getsockopt listen recv send setsockopt shutdown \
+	    socket socketpair msgctl msgget msgrcv msgsnd semctl semget \
+	    semop shmctl shmget shmread shmwrite endgrent endhostent \
+	    endnetent endpwent getgrent getgrgid getgrnam getlogin \
+	    getpwent getpwnam getpwuid setgrent setpwent endprotoent \
+	    endservent gethostbyaddr gethostbyname gethostent \
+	    getnetbyaddr getnetbyname getnetent getprotobyname \
+	    getprotobynumber getprotoent getservbyname getservbyport \
+	    getservent sethostent setnetent setprotoent setservent \
+	    gmtime localtime time times' -- $cur ) )
+	    return 0
+	    ;;
+    esac
+
+    case $cur in
+	-*)
+	    COMPREPLY=( $( compgen -W '-h -v -t -u -m -l -F -X -f -q' -- $cur ))
+	    return 0
+	    ;;
+	*/*)
+	    return 0
+	    ;;
+	*)
+	    _perlmodules
+	    COMPREPLY=( ${COMPREPLY[@]} $( compgen -W '$( PAGER=cat man perl 2>/dev/null | sed -ne "/perl.*Perl overview/,/perlwin32/s/^[^a-z0-9]*\([a-z0-9]*\).*$/\1/p")' -- $cur ) )
+
+	    return 0
+	    ;;
+    esac
+}
+complete -F _perldoc $default perldoc
+
+
+# sysctl(8) completion
+#
+_sysctl()
+{
+	local cur
+
+	COMPREPLY=()
+	cur=${COMP_WORDS[COMP_CWORD]}
+
+	COMPREPLY=( $( compgen -W "$(sysctl -a 2>/dev/null|awk -F":" '{print $1}')" -- $cur ) )
+
+	return 0
+} 
+complete -F _sysctl sysctl
+
+
+# svn completion
+#
+_svn()
+{
+	local cur prev commands options command
+
+	COMPREPLY=()
+	cur=${COMP_WORDS[COMP_CWORD]}
+
+	commands='add blame praise annotate ann cat checkout co cleanup commit \
+		ci copy cp delete del remove rm diff di export help ? h import \
+		info list ls lock log merge mkdir move mv rename ren \
+		propdel pdel pd propedit pedit pe propget pget pg \
+		proplist plist pl propset pset ps resolved revert \
+		status stat st switch sw unlock update up'
+
+	if [[ $COMP_CWORD -eq 1 ]] ; then
+		if [[ "$cur" == -* ]]; then
+			COMPREPLY=( $( compgen -W '--version' -- $cur ) )
+		else
+			COMPREPLY=( $( compgen -W "$commands" -- $cur ) )
+		fi
+	else
+
+		prev=${COMP_WORDS[COMP_CWORD-1]}
+		case $prev in
+			--config-dir)
+				_filedir -d
+				return 0;
+				;;
+			-@(F|-file|-targets))
+				_filedir
+				return 0;
+				;;
+			--encoding)
+				COMPREPLY=( $( compgen -W \
+					'$( iconv --list | sed -e "s@//@@;" )' \
+					-- "$cur" ) )
+				return 0;
+				;;
+			--@(editor|diff|diff3)-cmd)
+				COMP_WORDS=(COMP_WORDS[0] $cur)
+				COMP_CWORD=1
+				_command
+				return 0;
+				;;
+		esac
+
+		command=${COMP_WORDS[1]}
+
+		if [[ "$cur" == -* ]]; then
+			# possible options for the command
+			case $command in
+				add)
+					options='--auto-props --no-auto-props \
+						--force --targets --no-ignore \
+						--non-recursive -N -q --quiet'
+					;;
+				@(blame|annotate|ann|praise))
+					options='-r --revisions --username \
+						--password --no-auth-cache \
+						--non-interactive -v \
+						--verbose --incremental --xml'
+					;;
+				cat)
+					options='-r --revision --username \
+						--password --no-auth-cache \
+						--non-interactive'
+					;;
+				@(checkout|co))
+					options='-r --revision -q --quiet -N \
+						--non-recursive --username \
+						--password --no-auth-cache \
+						--non-interactive \
+						--ignore-externals'
+					;;
+				cleanup)
+					options='--diff3-cmd'
+					;;
+				@(commit|ci))
+					options='-m --message -F --file \
+						--encoding --force-log -q \
+						--quiet --non-recursive -N \
+						--targets --editor-cmd \
+						--username --password \
+						--no-auth-cache \
+						--non-interactive --no-unlock'
+					;;
+				@(copy|cp))
+					options='-m --message -F --file \
+						--encoding --force-log -r \
+						--revision -q --quiet \
+						--editor-cmd -username \
+						--password --no-auth-cache \
+						--non-interactive'
+					;;
+				@(delete|del|remove|rm))
+					options='--force -m --message -F \
+						--file --encoding --force-log \
+						-q --quiet --targets \
+						--editor-cmd -username \
+						--password --no-auth-cache \
+						--non-interactive'
+					;;
+				@(diff|di))
+					options='-r --revision -x --extensions \
+						--diff-cmd --no-diff-deleted \
+						-N --non-recursive --username \
+						--password --no-auth-cache \
+						--non-interactive --force \
+						--old --new --notice-ancestry'
+					;;
+				export)
+					options='-r --revision -q --quiet \
+						--username --password \
+						--no-auth-cache \
+						--non-interactive -N \
+						--non-recursive --force \
+						--native-eol --ignore-externals'
+					;;
+				import)
+					options='--auto-props --no-auto-props \
+						-m --message -F --file \
+						--encoding --force-log -q \
+						--quiet --non-recursive \
+						--no-ignore --editor-cmd \
+						--username --password \
+						--no-auth-cache \
+						--non-interactive'
+					;; 
+				info)
+					options='--username --password \
+						--no-auth-cache \
+						--non-interactive -r \
+						--revision --xml --targets \
+						-R --recursive --incremental'
+					;;
+				@(list|ls))
+					options='-r --revision -v --verbose -R \
+						--recursive --username \
+						--password --no-auth-cache \
+						--non-interactive \
+						--incremental --xml'
+					;;
+				lock)
+					options='-m --message -F --file \
+						--encoding --force-log \
+						--targets --force --username \
+						--password --no-auth-cache \
+						--non-interactive'
+					;;
+				log)
+					options='-r --revision -v --verbose \
+						--targets --username \
+						--password --no-auth-cache \
+						--non-interactive \
+						--stop-on-copy --incremental \
+						--xml -q --quiet --limit'
+					;;
+				merge)
+					options='-r --revision -N \
+						--non-recursive -q --quiet \
+						--force --dry-run --diff3-cmd \
+						--username --password \
+						--no-auth-cache \
+						--non-interactive \
+						--ignore-ancestry'
+					;;
+				mkdir)
+					options='-m --message -F --file \
+						--encoding --force-log -q \
+						--quiet --editor-cmd \
+						--username --password \
+						--no-auth-cache \
+						--non-interactive'
+					;;
+				@(move|mv|rename|ren))
+					options='-m --message -F --file \
+						--encoding --force-log -r \
+						--revision -q --quiet \
+						--force --editor-cmd \
+						--username --password \
+						--no-auth-cache \
+						--non-interactive'
+					;;
+				@(propdel|pdel|pd))
+					options='-q --quiet -R --recursive -r \
+						--revision --revprop \
+						--username --password \
+						--no-auth-cache \
+						--non-interactive'
+					;;
+				@(propedit|pedit|pe))
+					options='-r --revision --revprop \
+						--encoding --editor-cmd \
+						--username --password \
+						--no-auth-cache \
+						--non-interactive --force'
+					;;
+				@(propget|pget|pg))
+					options='-R --recursive -r --revision \
+						--revprop --strict --username \
+						--password --no-auth-cache \
+						--non-interactive'
+					;;
+				@(proplist|plist|pl))
+					options='-v --verbose -R --recursive \
+						-r --revision --revprop -q \
+						--quiet --username --password \
+						--no-auth-cache \
+						--non-interactive'
+					;;
+				@(propset|pset|ps))
+					options='-F --file -q --quiet \
+						--targets -R --recursive \
+						--revprop --encoding \
+						--username --password \
+						--no-auth-cache \
+						--non-interactive -r \
+						--revision --force'
+					;;
+				resolved)
+					options='--targets -R --recursive -q \
+						--quiet'
+					;;
+				revert)
+					options='--targets -R --recursive -q \
+						--quiet'
+					;;
+				@(status|stat|st))
+					options='-u --show-updates -v \
+						--verbose -N --non-recursive \
+						-q --quiet --username \
+						--password --no-auth-cache \
+						--non-interactive --no-ignore \
+						--ignore-externals \
+						--incremental --xml'
+					;;
+				@(switch|sw))
+					options='--relocate -r --revision -N \
+						--non-recursive -q --quiet \
+						--username --password \
+						--no-auth-cache \
+						--non-interactive --diff3-cmd'
+					;;
+				unlock)
+					options='--targets --force --username \
+						--password --no-auth-cache \
+						--non-interactive'
+					;;
+				@(update|up))
+					options='-r --revision -N \
+						--non-recursive -q --quiet \
+						--username --password \
+						--no-auth-cache \
+						--non-interactive \
+						--diff3-cmd --ignore-externals'
+					;;
+			esac
+			options="$options --help -h --config-dir"
+
+			COMPREPLY=( $( compgen -W "$options" -- $cur ) )
+		else
+			if [[ "$command" == @(help|h|\?) ]]; then
+				COMPREPLY=( $( compgen -W "$commands" -- $cur ) )
+			else
+				_filedir
+			fi
+		fi
+	fi
+
+	return 0
+}
+complete -F _svn $default svn
+
+_svnadmin()
+{
+	local cur prev commands options mode
+
+	COMPREPLY=()
+	cur=${COMP_WORDS[COMP_CWORD]}
+
+	commands='create deltify dump help ? hotcopy list-dblogs \
+		list-unused-dblogs load lslocks lstxns recover rmlocks \
+		rmtxns setlog verify'
+
+	if [[ $COMP_CWORD -eq 1 ]] ; then
+		if [[ "$cur" == -* ]]; then
+			COMPREPLY=( $( compgen -W '--version' -- $cur ) )
+		else
+			COMPREPLY=( $( compgen -W "$commands" -- $cur ) )
+		fi
+	else
+		prev=${COMP_WORDS[COMP_CWORD-1]}
+		case $prev in
+			--config-dir)
+				_filedir -d
+				return 0;
+				;;
+			--fs-type)
+				COMPREPLY=( $( compgen -W 'fsfs bdb' -- $cur ) )
+				return 0;
+				;;
+		esac
+
+		command=${COMP_WORDS[1]}
+
+		if [[ "$cur" == -* ]]; then
+			# possible options for the command
+			case $command in
+				create)
+					options='--bdb-txn-nosync \
+						--bdb-log-keep --config-dir \
+						--fs-type'
+					;;
+				deltify)
+					options='-r --revision -q --quiet'
+					;;
+				dump)
+					options='-r --revision --incremental \
+						-q --quiet --deltas'
+					;;
+				hotcopy)
+					options='--clean-logs'
+					;;
+				load)
+					options='--ignore-uuid --force-uuid \
+						--parent-dir -q --quiet \
+						--use-pre-commit-hook \
+						--use-post-commit-hook'
+					;;
+				rmtxns)
+					options='-q --quiet'
+					;;
+				setlog)
+					options='-r --revision --bypass-hooks'
+					;;
+			esac
+
+			options="$options --help -h"
+			COMPREPLY=( $( compgen -W "$options" -- $cur ) )
+		else
+			if [[ "$command" == @(help|h|\?) ]]; then
+				COMPREPLY=( $( compgen -W "$commands" -- $cur ) )
+			else
+				_filedir
+			fi
+		fi
+	fi
+
+	return 0
+}
+complete -F _svnadmin $default svnadmin
+
+_svnlook()
+{
+	local cur prev commands options mode
+
+	COMPREPLY=()
+	cur=${COMP_WORDS[COMP_CWORD]}
+
+	commands='author cat changed date diff dirs-changed help ? h history \
+		info lock log propget pget pg proplist plist pl tree uuid \
+		youngest'
+
+	if [[ $COMP_CWORD -eq 1 ]] ; then
+		if [[ "$cur" == -* ]]; then
+			COMPREPLY=( $( compgen -W '--version' -- $cur ) )
+		else
+			COMPREPLY=( $( compgen -W "$commands" -- $cur ) )
+		fi
+	else
+		command=${COMP_WORDS[1]}
+
+		if [[ "$cur" == -* ]]; then
+			# possible options for the command
+			case $command in
+				@(author|cat|date|dirs-changed|info|log))
+					options='-r --revision -t \
+						--transaction'
+					;;
+				changed)
+					options='-r --revision -t \
+						--transaction --copy-info'
+					;;
+				diff)
+					options='-r --revision -t \
+						--transaction \
+						--no-diff-deleted \
+						--no-diff-added \
+						--diff-copy-from'
+					;;
+				history)
+					options='-r --revision --show-ids'
+					;;
+				prop@(get|list))
+					options='-r --revision -t \
+						--transaction --revprop'
+					;;
+				tree)
+					options='-r --revision -t \
+						--transaction --show-ids \
+						--full-paths'
+					;;
+			esac
+
+			options="$options --help -h"
+			COMPREPLY=( $( compgen -W "$options" -- $cur ) )
+		else
+			if [[ "$command" == @(help|h|\?) ]]; then
+				COMPREPLY=( $( compgen -W "$commands" -- $cur ) )
+			else
+				_filedir
+			fi
+		fi
+	fi
+
+	return 0
+}
+complete -F _svnlook $default svnlook
+
+# vim: set filetype=sh : #

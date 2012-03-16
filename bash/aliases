@@ -1,0 +1,79 @@
+if [[ "$OSTYPE" == linux-gnu ]]; then
+    alias ls="ls -F --color=auto"
+else
+    alias ls="ls -GF"
+    alias acls="ls -l@eF"
+fi
+
+alias path='echo -e ${PATH//:/\\n}'
+alias du='du -kh'
+alias df='df -kH'
+alias which='type -all'
+
+
+# Special commands
+alias commabc="c2p|bc -i -l -q| sed -e 'y/,./.,/'"
+
+# Python
+alias venv='. bin/activate'
+
+if [[ "$OSTYPE" =~ darwin* ]]; then
+    alias stroke='/Applications/Utilities/Network\ Utility.app/Contents/Resources/stroke'
+    alias scan='sudo nmap -sS -PN'
+    alias scpresume="rsync --partial --progress --rsh=ssh"
+fi
+
+function genpasswd() # generate a password
+{
+    local l=$1
+    [ "$l" == "" ] && l=20
+    LC_ALL=C tr -dc A-Za-z0-9_ < /dev/urandom | head -c ${l} | xargs
+}
+
+function catv { egrep -v "^$|^#" ${*} ; }
+
+function irm() # Remove by inode number
+{
+    find . -inum $@ -maxdepth 1 -exec rm -rf {} \;
+}
+
+function findgrep() # grep string in all files
+{
+    find . -exec grep -H "$@" {} \;
+}
+
+function lowercase()  # move filenames to lowercase
+{
+    for file ; do
+        filename=${file##*/}
+        case "$filename" in
+        */*) dirname==${file%/*} ;;
+        *) dirname=.;;
+        esac
+        nf=$(echo $filename | tr A-Z a-z)
+        newname="${dirname}/${nf}"
+        if [ "$nf" != "$filename" ]; then
+            mv "$file" "$newname"
+            echo "lowercase: $file --> $newname"
+        else
+            echo "lowercase: $file not changed."
+        fi
+    done
+}
+
+function ip() # get IP adresses
+{
+    for iface in `echo en0`; do
+        exec /sbin/ifconfig $iface | awk '/inet / { print "'"$iface"' : " $2 } ' | sed -e s/addr://
+    done
+}
+
+function swap()         # swap 2 filenames around
+{
+    local TMPFILE=tmp.$$
+    mv "$1" $TMPFILE
+    mv "$2" "$1"
+    mv $TMPFILE "$2"
+}
+
+# vim: set filetype=sh : #
