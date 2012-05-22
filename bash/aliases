@@ -14,9 +14,6 @@ alias which='type -all'
 # Special commands
 alias commabc="c2p|bc -i -l -q| sed -e 'y/,./.,/'"
 
-# Python
-alias venv='. bin/activate'
-
 if [[ "$OSTYPE" =~ darwin* ]]; then
     alias stroke='/Applications/Utilities/Network\ Utility.app/Contents/Resources/stroke'
     alias scan='sudo nmap -sS -PN'
