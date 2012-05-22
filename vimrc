@@ -12,6 +12,8 @@ Bundle 'tpope/vim-fugitive'
 Bundle 'scrooloose/syntastic'
 Bundle 'cnf/vim-pointless'
 
+Bundle 'ervandew/supertab'
+
 filetype plugin indent on
 "}}}
 
@@ -44,7 +46,7 @@ set hlsearch                        " When there is a previous search pattern, h
 " }}}
 
 " Show Invisible Characters: {{{
-set list
+set nolist
 set listchars=tab:▸\ ,eol:¬
 " }}}
 
@@ -53,6 +55,8 @@ syntax enable
 set t_Co=256 "enable 256 colors
 set background=dark
 color pointless
+
+au! BufNewFile,BufRead Vagrantfile set filetype=ruby
 " }}}
 
 " PowerLine: {{{
