@@ -4,5 +4,5 @@ if [[ "$OSTYPE" =~ darwin* ]]; then
     [[ -d "/Developer/Tools/" ]] && PATH="$PATH:/Developer/Tools/"
 fi
 
-[[ -d "$HOME/.bin/" ]] && PATH="$HOME/.bin/:$PATH"
+[[ -d "$HOME/.bin" ]] && PATH="$HOME/.bin:$PATH"
 # vim: set filetype=sh : #
