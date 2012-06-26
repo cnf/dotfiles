@@ -46,8 +46,9 @@ set hlsearch                        " When there is a previous search pattern, h
 " }}}
 
 " Show Invisible Characters: {{{
-set nolist
-set listchars=tab:▸\ ,eol:¬
+set list
+set listchars=tab:▸\ 
+"set listchars=tab:▸\ ,eol:¬
 " }}}
 
 " Show Syntax Colors: {{{
