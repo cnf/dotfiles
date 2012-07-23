@@ -41,8 +41,4 @@ export HISTCONTROL=ignoredups:ignorespace
 
 #echo -ne "\033]0;${USER}@`hostname -s`\007"
 
-export WORKON_HOME=$HOME/.virtualenvs
-source /usr/local/bin/virtualenvwrapper.sh
-
-
 # vim: set filetype=sh : #
