@@ -30,4 +30,7 @@ SUDO_PS1='(LIVE) \[\033[01;32m\]\u@\h \[\033[01;34m\]\W \$ \[\033[00m\]'
 PS2=">> "
 PS4="++ "
 
+# Show last exit code if not 0
+trap 'echo Exit code: $?' ERR
+
 # vim: set filetype=sh : #
