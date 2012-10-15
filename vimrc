@@ -5,6 +5,9 @@ filetype off
 set rtp+=~/.vim/bundle/vundle/
 call vundle#rc()
 
+" :BundleInstall
+" or run
+" vim +BundleInstall +qall
 Bundle 'gmarik/vundle'
 
 Bundle 'Lokaltog/vim-powerline'
@@ -12,7 +15,12 @@ Bundle 'tpope/vim-fugitive'
 Bundle 'scrooloose/syntastic'
 Bundle 'cnf/vim-pointless'
 
-Bundle 'ervandew/supertab'
+"Bundle 'ervandew/supertab'
+
+Bundle 'tpope/vim-markdown'
+"Bundle 'msanders/snipmate.vim'
+"Bundle 'ervandew/supertab'
+"Bundle 'nathanaelkane/vim-indent-guides'
 
 filetype plugin indent on
 "}}}
@@ -58,10 +66,13 @@ set background=dark
 color pointless
 
 au! BufNewFile,BufRead Vagrantfile set filetype=ruby
+au! BufNewFile,BufRead *.json set ft=javascript
 " }}}
 
 " PowerLine: {{{
-let g:Powerline_symbols = 'fancy'
+" :PowerlineClearCache
+"let g:Powerline_symbols = 'fancy'
+"let g:Powerline_symbols = 'unicode'
 " }}}
 
 " Development: {{{
