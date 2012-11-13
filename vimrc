@@ -18,6 +18,7 @@ Bundle 'cnf/vim-pointless'
 "Bundle 'ervandew/supertab'
 
 Bundle 'tpope/vim-markdown'
+Bundle 'tomtom/tcomment_vim'
 "Bundle 'msanders/snipmate.vim'
 "Bundle 'ervandew/supertab'
 "Bundle 'nathanaelkane/vim-indent-guides'
@@ -36,6 +37,13 @@ set cursorline
 set mouse=a
 
 set modelines=5
+
+" Wrapping
+set showbreak=...
+
+highlight OverLength ctermbg=red ctermfg=white guibg=#592929
+match OverLength /\%81v.\+/
+
 
 set nomesg                          " because being talked to during an edit is aggravating
 " }}}
