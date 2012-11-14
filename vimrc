@@ -19,6 +19,7 @@ Bundle 'cnf/vim-pointless'
 
 Bundle 'tpope/vim-markdown'
 Bundle 'tomtom/tcomment_vim'
+Bundle 'rodjek/vim-puppet'
 "Bundle 'msanders/snipmate.vim'
 "Bundle 'ervandew/supertab'
 "Bundle 'nathanaelkane/vim-indent-guides'
