@@ -35,7 +35,7 @@ set encoding=utf-8 " Necessary to show unicode glyphs
 "set number
 "set relativenumber
 set cursorline
-set mouse=a
+set mouse=v
 
 set modelines=5
 
