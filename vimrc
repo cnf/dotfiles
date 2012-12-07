@@ -44,17 +44,21 @@ set showbreak=...
 highlight OverLength ctermbg=red ctermfg=white guibg=#592929
 match OverLength /\%81v.\+/
 
+set pastetoggle=<f5>
 
 set nomesg                          " because being talked to during an edit is aggravating
 " }}}
 
 " Tab Config: {{{
 set tabstop=4
+set softtabstop=4
 set shiftwidth=4
 set expandtab
 set autoindent
 set smartindent
 set cindent
+set smarttab
+set expandtab
 " }}}
 
 " Search Related: {{{
