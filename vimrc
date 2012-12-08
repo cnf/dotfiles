@@ -15,6 +15,8 @@ Bundle 'tpope/vim-fugitive'
 Bundle 'scrooloose/syntastic'
 Bundle 'cnf/vim-pointless'
 
+Bundle 'hynek/vim-python-pep8-indent'
+
 "Bundle 'ervandew/supertab'
 
 Bundle 'tpope/vim-markdown'
@@ -70,8 +72,10 @@ set hlsearch                        " When there is a previous search pattern, h
 
 " Show Invisible Characters: {{{
 set list
-set listchars=tab:▸\ 
+set listchars=tab:▸\	,trail:.
 "set listchars=tab:▸\ ,eol:¬
+" :highlight ExtraWhitespace ctermbg=red guibg=red
+" autocmd Syntax * syn match ExtraWhitespace /\s\+$\| \+\ze\t/
 " }}}
 
 " Show Syntax Colors: {{{
