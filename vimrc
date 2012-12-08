@@ -21,6 +21,7 @@ Bundle 'hynek/vim-python-pep8-indent'
 
 Bundle 'tpope/vim-markdown'
 Bundle 'tomtom/tcomment_vim'
+Bundle 'rodjek/vim-puppet'
 "Bundle 'msanders/snipmate.vim'
 "Bundle 'ervandew/supertab'
 "Bundle 'nathanaelkane/vim-indent-guides'
@@ -36,7 +37,7 @@ set encoding=utf-8 " Necessary to show unicode glyphs
 "set number
 "set relativenumber
 set cursorline
-set mouse=a
+set mouse=v
 
 set modelines=5
 
