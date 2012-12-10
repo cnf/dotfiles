@@ -22,6 +22,7 @@ Bundle 'hynek/vim-python-pep8-indent'
 Bundle 'tpope/vim-markdown'
 Bundle 'tomtom/tcomment_vim'
 Bundle 'rodjek/vim-puppet'
+Bundle 'Glench/Vim-Jinja2-Syntax'
 "Bundle 'msanders/snipmate.vim'
 "Bundle 'ervandew/supertab'
 "Bundle 'nathanaelkane/vim-indent-guides'
@@ -42,7 +43,7 @@ set mouse=v
 set modelines=5
 
 " Wrapping
-set showbreak=...
+" set showbreak=...
 
 highlight OverLength ctermbg=red ctermfg=white guibg=#592929
 match OverLength /\%81v.\+/
@@ -62,6 +63,9 @@ set smartindent
 set cindent
 set smarttab
 set expandtab
+
+autocmd FileType ruby setlocal ts=2 sts=2 sw=2
+autocmd FileType html setlocal ts=2 sts=2 sw=2
 " }}}
 
 " Search Related: {{{
