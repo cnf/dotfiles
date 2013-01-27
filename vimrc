@@ -42,7 +42,7 @@ set mouse=v
 set modelines=5
 
 " Wrapping
-set showbreak=...
+"set showbreak=...
 
 highlight OverLength ctermbg=red ctermfg=white guibg=#592929
 match OverLength /\%81v.\+/
