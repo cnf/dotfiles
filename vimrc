@@ -22,6 +22,7 @@ Bundle 'hynek/vim-python-pep8-indent'
 Bundle 'tpope/vim-markdown'
 Bundle 'tomtom/tcomment_vim'
 Bundle 'rodjek/vim-puppet'
+Bundle 'Glench/Vim-Jinja2-Syntax'
 "Bundle 'msanders/snipmate.vim'
 "Bundle 'ervandew/supertab'
 "Bundle 'nathanaelkane/vim-indent-guides'
@@ -61,7 +62,10 @@ set autoindent
 set smartindent
 set cindent
 set smarttab
-set expandtab
+
+autocmd FileType ruby setlocal ts=2 sts=2 sw=2
+autocmd FileType html setlocal ts=2 sts=2 sw=2
+autocmd FileType json setlocal ts=2 sts=2 sw=2
 " }}}
 
 " Search Related: {{{
@@ -73,7 +77,7 @@ set hlsearch                        " When there is a previous search pattern, h
 
 " Show Invisible Characters: {{{
 set list
-set listchars=tab:▸\	,trail:.
+set listchars=tab:▸\ ,trail:.
 "set listchars=tab:▸\ ,eol:¬
 " :highlight ExtraWhitespace ctermbg=red guibg=red
 " autocmd Syntax * syn match ExtraWhitespace /\s\+$\| \+\ze\t/
