@@ -43,7 +43,7 @@ set mouse=v
 set modelines=5
 
 " Wrapping
-" set showbreak=...
+"set showbreak=...
 
 " Don't put swp files in pwd
 set dir='~/.vim/swp,~/tmp,/var/tmp,/tmp'
