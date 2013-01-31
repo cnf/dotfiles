@@ -45,6 +45,9 @@ set modelines=5
 " Wrapping
 " set showbreak=...
 
+" Don't put swp files in pwd
+set dir='~/.vim/swp,~/tmp,/var/tmp,/tmp'
+
 highlight OverLength ctermbg=red ctermfg=white guibg=#592929
 match OverLength /\%81v.\+/
 
