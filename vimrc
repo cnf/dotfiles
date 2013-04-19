@@ -10,7 +10,7 @@ call vundle#rc()
 " vim +BundleInstall +qall
 Bundle 'gmarik/vundle'
 
-Bundle 'Lokaltog/vim-powerline'
+Bundle 'Lokaltog/powerline'
 Bundle 'tpope/vim-fugitive'
 Bundle 'scrooloose/syntastic'
 Bundle 'cnf/vim-pointless'
@@ -23,6 +23,7 @@ Bundle 'tpope/vim-markdown'
 Bundle 'tomtom/tcomment_vim'
 Bundle 'rodjek/vim-puppet'
 Bundle 'Glench/Vim-Jinja2-Syntax'
+Bundle 'airblade/vim-gitgutter'
 "Bundle 'msanders/snipmate.vim'
 "Bundle 'ervandew/supertab'
 "Bundle 'nathanaelkane/vim-indent-guides'
@@ -100,6 +101,11 @@ au! BufNewFile,BufRead *.json set ft=javascript
 " :PowerlineClearCache
 "let g:Powerline_symbols = 'fancy'
 "let g:Powerline_symbols = 'unicode'
+" }}}
+
+" Syntastic: {{{
+let g:syntastic_c_checker = "clang"
+let g:syntastic_cpp_checker = "clang++"
 " }}}
 
 " Development: {{{
