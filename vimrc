@@ -10,7 +10,7 @@ call vundle#rc()
 " vim +BundleInstall +qall
 Bundle 'gmarik/vundle'
 
-Bundle 'Lokaltog/powerline'
+Bundle 'Lokaltog/vim-powerline'
 Bundle 'tpope/vim-fugitive'
 Bundle 'scrooloose/syntastic'
 Bundle 'cnf/vim-pointless'
