@@ -82,6 +82,7 @@ set hlsearch                        " When there is a previous search pattern, h
 " Show Invisible Characters: {{{
 set list
 set listchars=tab:▸\ ,trail:.
+" set listchars=tab:▸\ ,trail:⋅,nbsp:⋅
 "set listchars=tab:▸\ ,eol:¬
 " :highlight ExtraWhitespace ctermbg=red guibg=red
 " autocmd Syntax * syn match ExtraWhitespace /\s\+$\| \+\ze\t/
@@ -104,8 +105,16 @@ au! BufNewFile,BufRead *.json set ft=javascript
 " }}}
 
 " Syntastic: {{{
-let g:syntastic_c_checker = "clang"
-let g:syntastic_cpp_checker = "clang++"
+" let g:syntastic_c_checker = "clang"
+" let g:syntastic_cpp_checker = "clang++"
+
+let g:syntastic_c_compiler = 'clang++'
+let g:syntastic_cpp_compiler = 'clang++'
+let g:syntastic_c_checkers = [ "gcc" ]
+let g:syntastic_cpp_checkers = [ "gcc" ]
+
+let g:syntastic_error_symbol = '✗'
+let g:syntastic_warning_symbol = '⚠'
 " }}}
 
 " Development: {{{
