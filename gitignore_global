@@ -45,3 +45,7 @@ ehthumbs.db
 Icon?
 Thumbs.db
 *.tmproj
+
+# Vagrant #
+###########
+.vagrant/
