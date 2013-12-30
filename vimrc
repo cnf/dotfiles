@@ -16,6 +16,7 @@ Bundle 'scrooloose/syntastic'
 Bundle 'cnf/vim-pointless'
 
 Bundle 'hynek/vim-python-pep8-indent'
+Bundle 'vim-scripts/Arduino-syntax-file'
 
 "Bundle 'ervandew/supertab'
 
