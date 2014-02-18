@@ -10,13 +10,16 @@ call vundle#rc()
 " vim +BundleInstall +qall
 Bundle 'gmarik/vundle'
 
-Bundle 'Lokaltog/vim-powerline'
+"Bundle 'Lokaltog/vim-powerline'
+Bundle 'bling/vim-airline'
+"Bundle 'itchyny/lightline.vim'
 Bundle 'tpope/vim-fugitive'
 Bundle 'scrooloose/syntastic'
 Bundle 'cnf/vim-pointless'
 
 Bundle 'hynek/vim-python-pep8-indent'
 Bundle 'vim-scripts/Arduino-syntax-file'
+Bundle 'jnwhiteh/vim-golang'
 
 "Bundle 'ervandew/supertab'
 
@@ -101,8 +104,13 @@ au! BufNewFile,BufRead *.json set ft=javascript
 
 " PowerLine: {{{
 " :PowerlineClearCache
-"let g:Powerline_symbols = 'fancy'
-"let g:Powerline_symbols = 'unicode'
+" let g:Powerline_symbols = 'fancy'
+" let g:Powerline_symbols = 'unicode'
+" }}}
+
+" Airline: {{{
+let g:airline_powerline_fonts = 0
+let g:airline#extensions#hunks#non_zero_only = 1
 " }}}
 
 " Syntastic: {{{
