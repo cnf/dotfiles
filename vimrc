@@ -14,9 +14,11 @@ Bundle 'gmarik/vundle'
 Bundle 'bling/vim-airline'
 "Bundle 'itchyny/lightline.vim'
 Bundle 'tpope/vim-fugitive'
+Bundle 'tpope/vim-sleuth'
 Bundle 'scrooloose/syntastic'
 Bundle 'cnf/vim-pointless'
 
+Bundle 'kien/ctrlp.vim'
 Bundle 'hynek/vim-python-pep8-indent'
 Bundle 'vim-scripts/Arduino-syntax-file'
 Bundle 'jnwhiteh/vim-golang'
@@ -39,6 +41,7 @@ filetype plugin indent on
 set nocompatible   " Disable vi-compatibility
 set laststatus=2   " Always show the statusline
 set encoding=utf-8 " Necessary to show unicode glyphs
+set timeoutlen=250
 
 "set number
 "set relativenumber
@@ -55,6 +58,10 @@ set dir='~/.vim/swp,~/tmp,/var/tmp,/tmp'
 
 highlight OverLength ctermbg=red ctermfg=white guibg=#592929
 match OverLength /\%81v.\+/
+
+" Auto save files when focus is lost
+au FocusLost * :wa
+set autowrite
 
 set pastetoggle=<f5>
 
@@ -102,6 +109,11 @@ au! BufNewFile,BufRead Vagrantfile set filetype=ruby
 au! BufNewFile,BufRead *.json set ft=javascript
 " }}}
 
+" Ctrl-P: {{{
+nnoremap <C-b> :CtrlPBuffer<CR>
+nnoremap <C-b><C-b> :b#<CR>
+" }}}
+
 " PowerLine: {{{
 " :PowerlineClearCache
 " let g:Powerline_symbols = 'fancy'
@@ -121,14 +133,29 @@ let g:syntastic_c_compiler = 'clang++'
 let g:syntastic_cpp_compiler = 'clang++'
 let g:syntastic_c_checkers = [ "gcc" ]
 let g:syntastic_cpp_checkers = [ "gcc" ]
+let g:syntastic_go_checkers = [ "go", "golint" ]
 
 let g:syntastic_error_symbol = '✗'
 let g:syntastic_warning_symbol = '⚠'
+let g:syntastic_style_error_symbol = '⮀'
+let g:syntastic_style_warning_symbol = '⮁'
+
+nnoremap <leader>[ :lnext<cr>
+nnoremap <leader>] :lprevious<cr>
+
 " }}}
 
 " Development: {{{
 " Show syntax highlighting groups for word under cursor
 map <F3> :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> trans<' . synIDattr(synID(line("."),col("."),0),"name") . "> lo<" . synIDattr(synIDtrans(synID(line("."),col("."),1)),"name") . ">" . " FG:" . synIDattr(synIDtrans(synID(line("."),col("."),1)),"fg#")<CR>
+" }}}
+
+" Code Folding: {{{
+set foldmethod=syntax   "fold based on syntax
+set foldnestmax=1       "deepest fold is 1 levels
+set foldenable        "dont fold by default
+" set foldlevel=1         "this is just what i use
+nnoremap zz zMzO
 " }}}
 
 
