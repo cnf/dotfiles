@@ -2,38 +2,42 @@
 set nocompatible
 filetype off
 
-set rtp+=~/.vim/bundle/vundle/
-call vundle#rc()
+"set rtp+=~/.vim/bundle/vundle/
+set rtp+=~/.vim/bundle/Vundle.vim
+"call vundle#rc()
+call vundle#begin()
 
-" :BundleInstall
+" :PluginInstall
 " or run
-" vim +BundleInstall +qall
-Bundle 'gmarik/vundle'
+" vim +PluginInstall +qall
+Plugin 'gmarik/Vundle.vim'
 
-"Bundle 'Lokaltog/vim-powerline'
-Bundle 'bling/vim-airline'
-"Bundle 'itchyny/lightline.vim'
-Bundle 'tpope/vim-fugitive'
-Bundle 'tpope/vim-sleuth'
-Bundle 'scrooloose/syntastic'
-Bundle 'cnf/vim-pointless'
+"Plugin 'Lokaltog/vim-powerline'
+Plugin 'bling/vim-airline'
+"Plugin 'itchyny/lightline.vim'
+Plugin 'tpope/vim-fugitive'
+Plugin 'tpope/vim-sleuth'
+Plugin 'scrooloose/syntastic'
+Plugin 'cnf/vim-pointless'
 
-Bundle 'kien/ctrlp.vim'
-Bundle 'hynek/vim-python-pep8-indent'
-Bundle 'vim-scripts/Arduino-syntax-file'
-Bundle 'jnwhiteh/vim-golang'
+Plugin 'kien/ctrlp.vim'
+Plugin 'hynek/vim-python-pep8-indent'
+Plugin 'vim-scripts/Arduino-syntax-file'
+Plugin 'jnwhiteh/vim-golang'
 
-"Bundle 'ervandew/supertab'
+"Plugin 'ervandew/supertab'
 
-Bundle 'tpope/vim-markdown'
-Bundle 'tomtom/tcomment_vim'
-Bundle 'rodjek/vim-puppet'
-Bundle 'Glench/Vim-Jinja2-Syntax'
-Bundle 'airblade/vim-gitgutter'
-"Bundle 'msanders/snipmate.vim'
-"Bundle 'ervandew/supertab'
-"Bundle 'nathanaelkane/vim-indent-guides'
+Plugin 'tpope/vim-markdown'
+Plugin 'tomtom/tcomment_vim'
+Plugin 'rodjek/vim-puppet'
+Plugin 'Glench/Vim-Jinja2-Syntax'
+Plugin 'airblade/vim-gitgutter'
+"Plugin 'msanders/snipmate.vim'
+"Plugin 'ervandew/supertab'
+"Plugin 'nathanaelkane/vim-indent-guides'
 
+" All of your Plugins must be added before the following line
+call vundle#end()
 filetype plugin indent on
 "}}}
 
