@@ -15,26 +15,32 @@ Plugin 'gmarik/Vundle.vim'
 "Plugin 'Lokaltog/vim-powerline'
 Plugin 'bling/vim-airline'
 "Plugin 'itchyny/lightline.vim'
-Plugin 'tpope/vim-fugitive'
-Plugin 'tpope/vim-sleuth'
+Plugin 'tpope/vim-fugitive' " git wrapper
+Plugin 'tpope/vim-sleuth' " Detect indent style
 Plugin 'scrooloose/syntastic'
-Plugin 'cnf/vim-pointless'
-
-Plugin 'kien/ctrlp.vim'
-Plugin 'hynek/vim-python-pep8-indent'
-Plugin 'vim-scripts/Arduino-syntax-file'
-Plugin 'jnwhiteh/vim-golang'
-
-"Plugin 'ervandew/supertab'
-
-Plugin 'tpope/vim-markdown'
-Plugin 'tomtom/tcomment_vim'
-Plugin 'rodjek/vim-puppet'
-Plugin 'Glench/Vim-Jinja2-Syntax'
+Plugin 'kien/ctrlp.vim' " multi file openenr
+Plugin 'tomtom/tcomment_vim' " commenter
 Plugin 'airblade/vim-gitgutter'
+Plugin 'Shougo/neocomplete.vim'
 "Plugin 'msanders/snipmate.vim'
 "Plugin 'ervandew/supertab'
 "Plugin 'nathanaelkane/vim-indent-guides'
+
+" color scheme
+Plugin 'cnf/vim-pointless'
+
+" Syntax
+Plugin 'hynek/vim-python-pep8-indent'
+Plugin 'vim-scripts/Arduino-syntax-file'
+"Plugin 'jnwhiteh/vim-golang' " Deprecated
+Plugin 'fatih/vim-go'
+Plugin 'tpope/vim-markdown'
+
+Plugin 'rodjek/vim-puppet'
+Plugin 'Glench/Vim-Jinja2-Syntax'
+Plugin 'docker/docker', {'rtp': 'contrib/syntax/vim/'}
+Plugin 'cespare/vim-toml'
+
 
 " All of your Plugins must be added before the following line
 call vundle#end()
@@ -46,6 +52,8 @@ set nocompatible   " Disable vi-compatibility
 set laststatus=2   " Always show the statusline
 set encoding=utf-8 " Necessary to show unicode glyphs
 set timeoutlen=250
+
+set backspace=2    " make backspace work in insert mode
 
 "set number
 "set relativenumber
@@ -69,6 +77,8 @@ set autowrite
 
 set pastetoggle=<f5>
 
+set wildignore+=_workspace
+
 set nomesg                          " because being talked to during an edit is aggravating
 " }}}
 
@@ -85,6 +95,7 @@ set smarttab
 autocmd FileType ruby setlocal ts=2 sts=2 sw=2
 autocmd FileType html setlocal ts=2 sts=2 sw=2
 autocmd FileType json setlocal ts=2 sts=2 sw=2
+autocmd FileType go setlocal noexpandtab ts=4 sts=0 sw=4
 " }}}
 
 " Search Related: {{{
@@ -116,6 +127,19 @@ au! BufNewFile,BufRead *.json set ft=javascript
 " Ctrl-P: {{{
 nnoremap <C-b> :CtrlPBuffer<CR>
 nnoremap <C-b><C-b> :b#<CR>
+
+"let g:ctrlp_buffer_func = { 'enter': 'CtrlPMappings' }
+
+"function! CtrlPMappings()
+"    nnoremap <buffer> <silent> <C-@> :call <sid>DeleteBuffer()<cr>
+"endfunction
+
+"function! s:DeleteBuffer()
+"    let path = fnamemodify(getline('.')[2:], ':p')
+"    let bufn = matchstr(path, '\v\d+\ze\*No Name')
+"    exec "bd" bufn ==# "" ? path : bufn
+"    exec "norm \<F5>"
+"endfunction
 " }}}
 
 " PowerLine: {{{
@@ -125,8 +149,14 @@ nnoremap <C-b><C-b> :b#<CR>
 " }}}
 
 " Airline: {{{
-let g:airline_powerline_fonts = 0
+let g:airline_powerline_fonts = 1
 let g:airline#extensions#hunks#non_zero_only = 1
+let g:airline#extensions#tabline#enabled = 1
+
+let g:airline_left_sep = ''
+let g:airline_right_sep = ''
+let g:airline#extensions#tabline#left_sep = ''
+let g:airline#extensions#tabline#left_alt_sep = '|'
 " }}}
 
 " Syntastic: {{{
@@ -137,7 +167,7 @@ let g:syntastic_c_compiler = 'clang++'
 let g:syntastic_cpp_compiler = 'clang++'
 let g:syntastic_c_checkers = [ "gcc" ]
 let g:syntastic_cpp_checkers = [ "gcc" ]
-let g:syntastic_go_checkers = [ "go", "golint" ]
+let g:syntastic_go_checkers = [ "godep", "go", "golint"]
 
 let g:syntastic_error_symbol = '✗'
 let g:syntastic_warning_symbol = '⚠'
@@ -147,6 +177,11 @@ let g:syntastic_style_warning_symbol = '⮁'
 nnoremap <leader>[ :lnext<cr>
 nnoremap <leader>] :lprevious<cr>
 
+" }}}
+
+" NeoVim: {{{
+let g:neocomplete#enable_at_startup = 1
+let g:neocomplete#enable_smart_case = 1
 " }}}
 
 " Development: {{{

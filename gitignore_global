@@ -6,7 +6,7 @@
 
 # Compiled source #
 ###################
-*.com
+#*.com # really messes with golang paths with domain names
 *.class
 *.dll
 *.exe
