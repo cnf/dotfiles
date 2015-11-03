@@ -79,8 +79,6 @@ set pastetoggle=<f5>
 
 set wildignore+=_workspace
 
-set nomesg                          " because being talked to during an edit is aggravating
-" }}}
 
 " Tab Config: {{{
 set tabstop=4
