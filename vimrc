@@ -79,6 +79,7 @@ set pastetoggle=<f5>
 
 set wildignore+=_workspace
 
+" }}}
 
 " Tab Config: {{{
 set tabstop=4
