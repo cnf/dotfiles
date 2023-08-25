@@ -5,6 +5,8 @@
 *-TEST
 tags
 bucket/
+my_*
+MY_*
 
 # Compiled source #
 ###################
