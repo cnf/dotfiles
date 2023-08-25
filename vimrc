@@ -21,10 +21,12 @@ Plugin 'scrooloose/syntastic'
 Plugin 'kien/ctrlp.vim' " multi file openenr
 Plugin 'tomtom/tcomment_vim' " commenter
 Plugin 'airblade/vim-gitgutter'
-Plugin 'Shougo/neocomplete.vim'
+"Plugin 'Shougo/neocomplete.vim'
+"Plugin 'Valloric/YouCompleteMe'
 "Plugin 'msanders/snipmate.vim'
 "Plugin 'ervandew/supertab'
 "Plugin 'nathanaelkane/vim-indent-guides'
+Plugin 'rking/ag.vim'
 
 " color scheme
 Plugin 'cnf/vim-pointless'
@@ -95,6 +97,7 @@ autocmd FileType ruby setlocal ts=2 sts=2 sw=2
 autocmd FileType html setlocal ts=2 sts=2 sw=2
 autocmd FileType json setlocal ts=2 sts=2 sw=2
 autocmd FileType go setlocal noexpandtab ts=4 sts=0 sw=4
+autocmd BufRead *.c setlocal noexpandtab ts=4 sts=4 sw=4
 " }}}
 
 " Search Related: {{{
@@ -152,13 +155,16 @@ let g:airline_powerline_fonts = 1
 let g:airline#extensions#hunks#non_zero_only = 1
 let g:airline#extensions#tabline#enabled = 1
 
-let g:airline_left_sep = ''
-let g:airline_right_sep = ''
-let g:airline#extensions#tabline#left_sep = ''
-let g:airline#extensions#tabline#left_alt_sep = '|'
+"let g:airline_left_sep = ''
+"let g:airline_right_sep = ''
+"let g:airline#extensions#tabline#left_sep = ''
+"let g:airline#extensions#tabline#left_alt_sep = '|'
 " }}}
 
 " Syntastic: {{{
+let g:syntascit_check_on_wq = 0
+"let g:syntastic_mode_map = { 'mode': 'active', 'passive_filetypes': ['go'] }
+let g:go_list_type = "quickfix"
 " let g:syntastic_c_checker = "clang"
 " let g:syntastic_cpp_checker = "clang++"
 
@@ -166,7 +172,8 @@ let g:syntastic_c_compiler = 'clang++'
 let g:syntastic_cpp_compiler = 'clang++'
 let g:syntastic_c_checkers = [ "gcc" ]
 let g:syntastic_cpp_checkers = [ "gcc" ]
-let g:syntastic_go_checkers = [ "godep", "go", "golint"]
+" let g:syntastic_go_checkers = [ "godep", "go", "golint"]
+let g:syntastic_go_checkers = [ 'goling', 'govet', 'errcheck', 'godep']
 
 let g:syntastic_error_symbol = '✗'
 let g:syntastic_warning_symbol = '⚠'
@@ -195,6 +202,5 @@ set foldenable        "dont fold by default
 " set foldlevel=1         "this is just what i use
 nnoremap zz zMzO
 " }}}
-
 
 " vim: set foldmethod=marker : "
